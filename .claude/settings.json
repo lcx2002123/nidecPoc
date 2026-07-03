@@ -1,0 +1,30 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/skills/querying-soql/hooks/scripts/post-tool-validate.py"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/cost-tracker.py"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "PowerShell($paths = @\\(\"$env:ProgramData\\\\ClaudeCode\\\\managed-settings.json\", \"$env:ProgramData\\\\Claude Code\\\\managed-settings.json\", \"C:\\\\ProgramData\\\\ClaudeCode\\\\managed-settings.json\"\\); foreach \\($p in $paths\\) { if \\(Test-Path $p\\) { \"=== $p ===\"; Get-Content $p -Raw } })"
+    ]
+  }
+}

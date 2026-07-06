@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Service Assist Agent Access</label>
+    <description>Grants access needed to use the Service Assist Agent (①): read/edit AI_Resolution_Plan__c on Case, run the backing Apex actions, and access the agent in the Copilot panel.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <agentAccesses>
+        <agentName>Service_Assist_Agent</agentName>
+        <enabled>true</enabled>
+    </agentAccesses>
+    <fieldPermissions>
+        <field>Case.AI_Resolution_Plan__c</field>
+        <readable>true</readable>
+        <editable>true</editable>
+    </fieldPermissions>
+    <classAccesses>
+        <apexClass>GetCaseDetailsForAgent</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>SaveCaseResolutionPlan</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+</PermissionSet>

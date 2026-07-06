@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GenAiPlannerBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>サービス拠点担当者向け。Case/Accountを参照し解決方案ドラフトをAI_Resolution_Plan__cに生成する社内アシスタント。</description>
+    <localTopicLinks>
+        <genAiPluginName>ambiguous_question_16jdL000003E3Nh</genAiPluginName>
+    </localTopicLinks>
+    <localTopicLinks>
+        <genAiPluginName>case_response_drafting_16jdL000003E3Nh</genAiPluginName>
+    </localTopicLinks>
+    <localTopicLinks>
+        <genAiPluginName>off_topic_16jdL000003E3Nh</genAiPluginName>
+    </localTopicLinks>
+    <localTopicLinks>
+        <genAiPluginName>topic_selector_16jdL000003E3Nh</genAiPluginName>
+    </localTopicLinks>
+    <localTopics>
+        <fullName>off_topic_16jdL000003E3Nh</fullName>
+        <canEscalate>false</canEscalate>
+        <description>Redirect conversation to relevant topics when user request goes off-topic</description>
+        <developerName>off_topic_16jdL000003E3Nh</developerName>
+        <genAiPluginInstructions>
+            <description>You are an AI assistant for internal service representatives at a support center.
+You help reps draft resolution plans for customer Cases by reading Case and Account
+details and writing a proposed resolution into the Case. You are an AI assistant, not a human.
+You never send anything to the customer — you only draft and save the plan for the rep to review.</description>
+            <developerName>instruction0_179dL000004Wbwd</developerName>
+            <language>ja</language>
+            <masterLabel>instruction0_179dL000004Wbwd</masterLabel>
+            <sortOrder>1</sortOrder>
+        </genAiPluginInstructions>
+        <language>ja</language>
+        <localDeveloperName>off_topic</localDeveloperName>
+        <masterLabel>Off Topic</masterLabel>
+        <pluginType>Topic</pluginType>
+    </localTopics>
+    <localTopics>
+        <fullName>case_response_drafting_16jdL000003E3Nh</fullName>
+        <canEscalate>false</canEscalate>
+        <description>Read Case and Account details, draft a resolution plan, and save it to the Case AI_Resolution_Plan__c field.</description>
+        <developerName>case_response_drafting_16jdL000003E3Nh</developerName>
+        <genAiPluginInstructions>
+            <description>You are an AI assistant for internal service representatives at a support center.
+You help reps draft resolution plans for customer Cases by reading Case and Account
+details and writing a proposed resolution into the Case. You are an AI assistant, not a human.
+You never send anything to the customer — you only draft and save the plan for the rep to review.</description>
+            <developerName>instruction0_179dL000004Wbwc</developerName>
+            <language>ja</language>
+            <masterLabel>instruction0_179dL000004Wbwc</masterLabel>
+            <sortOrder>1</sortOrder>
+        </genAiPluginInstructions>
+        <language>ja</language>
+        <localActionLinks>
+            <functionName>AnswerQuestionsWithKnowledge_179dL000004Wbwc</functionName>
+        </localActionLinks>
+        <localActionLinks>
+            <functionName>GetRecordDetails_179dL000004Wbwc</functionName>
+        </localActionLinks>
+        <localActionLinks>
+            <functionName>UpdateRecordFields_179dL000004Wbwc</functionName>
+        </localActionLinks>
+        <localActions>
+            <fullName>AnswerQuestionsWithKnowledge_179dL000004Wbwc</fullName>
+            <description>Answers questions about company policies and procedures, troubleshooting steps, or product information. For example: “What is your return policy?” “How do I fix an issue?” or “What features does a product have?”</description>
+            <developerName>AnswerQuestionsWithKnowledge_179dL000004Wbwc</developerName>
+            <invocationTarget>streamKnowledgeSearch</invocationTarget>
+            <invocationTargetType>standardInvocableAction</invocationTargetType>
+            <isConfirmationRequired>false</isConfirmationRequired>
+            <isIncludeInProgressIndicator>true</isIncludeInProgressIndicator>
+            <localDeveloperName>AnswerQuestionsWithKnowledge</localDeveloperName>
+            <masterLabel>Answer Questions with Knowledge</masterLabel>
+            <progressIndicatorMessage>Getting answers</progressIndicatorMessage>
+            <source>EmployeeCopilot__AnswerQuestionsWithKnowledge</source>
+        </localActions>
+        <localActions>
+            <fullName>UpdateRecordFields_179dL000004Wbwc</fullName>
+            <description>Updates fields on a Salesforce CRM record. The action ExtractFieldsAndValuesFromUserInput must be called prior to this action to extract the record&apos;s fields and values.</description>
+            <developerName>UpdateRecordFields_179dL000004Wbwc</developerName>
+            <invocationTarget>einsteinCopilotUpdateRecord</invocationTarget>
+            <invocationTargetType>standardInvocableAction</invocationTargetType>
+            <isConfirmationRequired>true</isConfirmationRequired>
+            <isIncludeInProgressIndicator>true</isIncludeInProgressIndicator>
+            <localDeveloperName>UpdateRecordFields</localDeveloperName>
+            <masterLabel>Update Record</masterLabel>
+            <progressIndicatorMessage>Making updates</progressIndicatorMessage>
+            <source>EmployeeCopilot__UpdateRecordFields</source>
+        </localActions>
+        <localActions>
+            <fullName>GetRecordDetails_179dL000004Wbwc</fullName>
+            <description>Generates a text blob containing record details, including object fields and values and records from related lists.</description>
+            <developerName>GetRecordDetails_179dL000004Wbwc</developerName>
+            <invocationTarget>getDataForGrounding</invocationTarget>
+            <invocationTargetType>standardInvocableAction</invocationTargetType>
+            <isConfirmationRequired>false</isConfirmationRequired>
+            <isIncludeInProgressIndicator>true</isIncludeInProgressIndicator>
+            <localDeveloperName>GetRecordDetails</localDeveloperName>
+            <masterLabel>Get Record Details</masterLabel>
+            <progressIndicatorMessage>Getting details</progressIndicatorMessage>
+            <source>EmployeeCopilot__GetRecordDetails</source>
+        </localActions>
+        <localDeveloperName>case_response_drafting</localDeveloperName>
+        <masterLabel>Case Response Drafting</masterLabel>
+        <pluginType>Topic</pluginType>
+    </localTopics>
+    <localTopics>
+        <fullName>ambiguous_question_16jdL000003E3Nh</fullName>
+        <canEscalate>false</canEscalate>
+        <description>Redirect conversation to relevant topics when user request is too ambiguous</description>
+        <developerName>ambiguous_question_16jdL000003E3Nh</developerName>
+        <genAiPluginInstructions>
+            <description>You are an AI assistant for internal service representatives at a support center.
+You help reps draft resolution plans for customer Cases by reading Case and Account
+details and writing a proposed resolution into the Case. You are an AI assistant, not a human.
+You never send anything to the customer — you only draft and save the plan for the rep to review.</description>
+            <developerName>instruction0_179dL000004Wbwb</developerName>
+            <language>ja</language>
+            <masterLabel>instruction0_179dL000004Wbwb</masterLabel>
+            <sortOrder>1</sortOrder>
+        </genAiPluginInstructions>
+        <language>ja</language>
+        <localDeveloperName>ambiguous_question</localDeveloperName>
+        <masterLabel>Ambiguous Question</masterLabel>
+        <pluginType>Topic</pluginType>
+    </localTopics>
+    <localTopics>
+        <fullName>topic_selector_16jdL000003E3Nh</fullName>
+        <canEscalate>false</canEscalate>
+        <description>Welcome the user and route to the appropriate topic based on user input</description>
+        <developerName>topic_selector_16jdL000003E3Nh</developerName>
+        <genAiPluginInstructions>
+            <description>You are an AI assistant for internal service representatives at a support center.
+You help reps draft resolution plans for customer Cases by reading Case and Account
+details and writing a proposed resolution into the Case. You are an AI assistant, not a human.
+You never send anything to the customer — you only draft and save the plan for the rep to review.</description>
+            <developerName>instruction0_179dL000004Wbwe</developerName>
+            <language>ja</language>
+            <masterLabel>instruction0_179dL000004Wbwe</masterLabel>
+            <sortOrder>1</sortOrder>
+        </genAiPluginInstructions>
+        <language>ja</language>
+        <localDeveloperName>topic_selector</localDeveloperName>
+        <masterLabel>Topic Selector</masterLabel>
+        <pluginType>Topic</pluginType>
+    </localTopics>
+    <masterLabel>サービス担当Agent</masterLabel>
+    <plannerActions>
+        <fullName>AnswerQuestionsWithKnowledge_16jdL000003E3Nh</fullName>
+        <description>Answers questions about company policies and procedures, troubleshooting steps, or product information. For example: “What is your return policy?” “How do I fix an issue?” or “What features does a product have?”</description>
+        <developerName>AnswerQuestionsWithKnowledge_16jdL000003E3Nh</developerName>
+        <invocationTarget>streamKnowledgeSearch</invocationTarget>
+        <invocationTargetType>standardInvocableAction</invocationTargetType>
+        <isConfirmationRequired>false</isConfirmationRequired>
+        <isIncludeInProgressIndicator>true</isIncludeInProgressIndicator>
+        <localDeveloperName>AnswerQuestionsWithKnowledge</localDeveloperName>
+        <masterLabel>Answer Questions with Knowledge</masterLabel>
+        <progressIndicatorMessage>Getting answers</progressIndicatorMessage>
+        <source>EmployeeCopilot__AnswerQuestionsWithKnowledge</source>
+    </plannerActions>
+    <plannerType>Atlas__ConcurrentMultiAgentOrchestration</plannerType>
+</GenAiPlannerBundle>

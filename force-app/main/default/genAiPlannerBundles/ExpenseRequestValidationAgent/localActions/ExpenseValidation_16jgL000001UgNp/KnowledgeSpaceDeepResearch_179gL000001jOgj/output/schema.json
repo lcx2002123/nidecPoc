@@ -1,0 +1,39 @@
+{
+  "unevaluatedProperties" : false,
+  "properties" : {
+    "cardTitle" : {
+      "title" : "Card Title",
+      "description" : "Title for the research card",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : true,
+      "copilotAction:isUsedByPlanner" : true
+    },
+    "researchTasks" : {
+      "title" : "Research Tasks",
+      "description" : "JSON string: array of research task strings",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : true,
+      "copilotAction:isUsedByPlanner" : true
+    },
+    "researchDataSources" : {
+      "title" : "Data Sources",
+      "description" : "JSON string: array of sources. CRM Search uses type, sourceLabel, recordId, recordLabel. Other sources use type, label",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : true,
+      "copilotAction:isUsedByPlanner" : true
+    },
+    "reportTemplate" : {
+      "title" : "Report Template",
+      "description" : "JSON string: object with type and label",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : true,
+      "copilotAction:isUsedByPlanner" : true
+    }
+  },
+  "lightning:type" : "lightning__objectType",
+  "lightning:textIndexed" : true
+}

@@ -127,7 +127,7 @@ Update Record の入力は `recordDetailInput`（型 `lightning__recordInfoType`
 
 ## 関連メタデータ
 - AiAuthoringBundle: `Service_Assist_Agent`
-- Apex: `SaveCaseResolutionPlan`（保存）, `GetCaseDetailsForAgent`（旧・Apex版取得。標準Get Record Details採用により未使用）
+- Apex: `SaveCaseResolutionPlan`（保存）  ※ 旧・Apex版取得 `GetCaseDetailsForAgent` は標準 Get Record Details 採用により未使用となったため削除済み（manifest/destructiveChanges.xml 参照）
 - Custom Field: `Case.AI_Resolution_Plan__c`（Long Text Area）
 - Permission Set: `Service_Assist_Agent_Access`（FLS + Apexアクセス + agentAccesses）
 - Data Library: `Service_Knowledge_Library`（Knowledge記事4件をインデックス）

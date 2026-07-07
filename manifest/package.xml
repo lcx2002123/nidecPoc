@@ -1,36 +1,29 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!-- Release manifest: Service Assist Agent (サービス担当Agent) のリソースのみ -->
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
     <types>
-        <members>*</members>
+        <members>Service_Assist_Agent</members>
+        <name>AiAuthoringBundle</name>
+    </types>
+    <types>
+        <members>Service_Assist_Agent</members>
+        <name>Bot</name>
+    </types>
+    <types>
+        <members>Service_Assist_Agent_v1</members>
+        <name>GenAiPlannerBundle</name>
+    </types>
+    <types>
+        <members>SaveCaseResolutionPlan</members>
         <name>ApexClass</name>
     </types>
     <types>
-        <members>*</members>
-        <name>ApexComponent</name>
+        <members>Case.AI_Resolution_Plan__c</members>
+        <name>CustomField</name>
     </types>
     <types>
-        <members>*</members>
-        <name>ApexPage</name>
-    </types>
-    <types>
-        <members>*</members>
-        <name>ApexTestSuite</name>
-    </types>
-    <types>
-        <members>*</members>
-        <name>ApexTrigger</name>
-    </types>
-    <types>
-        <members>*</members>
-        <name>AuraDefinitionBundle</name>
-    </types>
-    <types>
-        <members>*</members>
-        <name>LightningComponentBundle</name>
-    </types>
-    <types>
-        <members>*</members>
-        <name>StaticResource</name>
+        <members>Service_Assist_Agent_Access</members>
+        <name>PermissionSet</name>
     </types>
     <version>66.0</version>
 </Package>

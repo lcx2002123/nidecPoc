@@ -13,10 +13,6 @@
         <editable>true</editable>
     </fieldPermissions>
     <classAccesses>
-        <apexClass>GetCaseDetailsForAgent</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
         <apexClass>SaveCaseResolutionPlan</apexClass>
         <enabled>true</enabled>
     </classAccesses>

@@ -11,131 +11,251 @@ system:
 config:
     developer_name: "Service_Assist_Agent"
     agent_label: "サービス担当Agent"
+    agent_template: "EmployeeCopilot__AgentforceEmployeeAgent"  
     description: "サービス拠点担当者向け。Case/Accountを参照し解決方案ドラフトをAI_Resolution_Plan__cに生成する社内アシスタント。"
     agent_type: "AgentforceEmployeeAgent"
     # Employee agent: no default_agent_user, no MessagingSession vars, no escalation.
 
-variables:
-    plan_saved: mutable boolean = False
-        description: "Whether a resolution plan has been drafted and saved for the current Case"
-    knowledge_summary: mutable string = ""
-        description: "Latest knowledge search summary for the rep's question"
-
 language:
-    default_locale: "en_US"
-    additional_locales: ""
+    default_locale: "ja"
+    additional_locales: "en_GB,en_US"
     all_additional_locales: False
+
+knowledge:
+    rag_feature_config_id: "ARFPC_1JDdL00000NMOJNWA5"
+    citations_url: ""
+    citations_enabled: False
 
 start_agent topic_selector:
     label: "Topic Selector"
-    description: "Welcome the user and route to the appropriate topic based on user input"
-
+    description: "Welcome the user and determine the appropriate subagent based on user input"
+    model_config:
+        model: "model://sfdc_ai__DefaultEinsteinHyperClassifier"
     reasoning:
         instructions: ->
-            | Select the tool that best matches the user's message and conversation history.
-              If the rep wants to draft/generate a Case resolution plan, OR asks a knowledge question
-              (procedures, troubleshooting, product info, policies), route to case response drafting.
-              If it's unclear, make your best guess.
+            | Select the best tool to call based on conversation history and user's intent.
         actions:
-            go_to_case_drafting: @utils.transition to @subagent.case_response_drafting
-                description: "Draft a Case resolution plan, or answer a knowledge question"
+            go_to_GeneralFAQ: @utils.transition to @subagent.GeneralFAQ
             go_to_off_topic: @utils.transition to @subagent.off_topic
-                description: "Handle off-topic requests"
             go_to_ambiguous_question: @utils.transition to @subagent.ambiguous_question
-                description: "Ask for clarification on ambiguous requests"
+            go_to_Case_Response_Drafting: @utils.transition to @subagent.case_response_drafting
 
 subagent case_response_drafting:
     label: "Case Response Drafting"
     description: "Read Case and Account details, draft a resolution plan, and save it to the Case AI_Resolution_Plan__c field."
-
-    actions:
-        # ① Case 取得 — 標準アクション Get Record Details
-        get_case_details:
-            description: "Get the details of a Case record by its Id, as a structured snapshot"
-            target: "standardInvocableAction://getDataForGrounding"
-            source: "EmployeeCopilot__GetRecordDetails"
-            inputs:
-                recordId: object
-                    description: "The Id of the Case record to read"
-                    complex_data_type_name: "lightning__recordIdType"
-            outputs:
-                snapshot: string
-                    description: "The Case record details snapshot"
-                    filter_from_agent: False
-
-        # ① 保存 — カスタム Apex（標準 Update Record は ExtractFields 連携が必須のため保存用途に不向き）
-        update_case:
-            description: "Update the Case, writing the drafted resolution plan into AI_Resolution_Plan__c"
-            target: "apex://SaveCaseResolutionPlan"
-            inputs:
-                recordId: string
-                    description: "The Id of the Case to update"
-                resolutionPlan: string
-                    description: "The drafted resolution plan text to save on the Case"
-            outputs:
-                isSuccess: boolean
-                    description: "Whether the update succeeded"
-                    filter_from_agent: True
-                message: string
-                    description: "Status message"
-                    filter_from_agent: True
-
-        # ② ナレッジ横断検索 — 標準アクション Answer Questions with Knowledge (RAG)
-        answer_with_knowledge:
-            description: "Search the knowledge base and return a grounded answer with source citations"
-            target: "standardInvocableAction://streamKnowledgeSearch"
-            source: "EmployeeCopilot__AnswerQuestionsWithKnowledge"
-            inputs:
-                query: string
-                    description: "The rep's question to search the knowledge base for"
-            outputs:
-                knowledgeSummary: string
-                    description: "Grounded answer summarized from knowledge articles"
-                    filter_from_agent: False
-                citationSources: string
-                    description: "Source articles used for the answer"
-                    filter_from_agent: False
-
     reasoning:
         instructions: ->
-            # Post-action guidance first
-            if @variables.plan_saved == True:
-                | 解決方案の下書きをCaseのAI Resolution Plan項目に保存しました。
-                  内容を確認し、必要に応じて修正してください。顧客への送信は手動で行ってください。
-                  同じ生成を繰り返さないでください。
-
-            | あなたはサービス拠点担当者を支援します。以下のいずれかを担当者の要求に応じて行います。
-
-            | 【A. Case解決方案の作成・保存】担当者が特定のCaseの回答/解決方案の作成を求めた場合:
-              1. Case番号またはCase IDが不明なら尋ねる。
-              2. get_case_details でCaseの詳細スナップショットを取得する。
-              3. 取得した内容だけを根拠に、簡潔で実行可能な解決方案（原因の推定と対応手順）を作成する。取得できない情報は推測しない。
-              4. update_case で作成した解決方案をCaseのAI_Resolution_Plan__c項目に書き込み、「保存しました」と伝えて確認・修正を促す。
-
-            | 【B. ナレッジ横断検索】担当者がナレッジ記事・手順・製品情報など一般的な質問をした場合:
-              answer_with_knowledge でナレッジベースを検索し、返ってきた knowledgeSummary を根拠として提示し、citationSources（参照記事）も明示する。
-              検索結果に無い内容は創作しない。
-
-            | show_commandツールは使わず、必ず通常のテキストで応答すること。
-
+            |手順:
+                ユーザーがCase番号（例: 00001028）を指定した場合、
+                    1. QueryRecords アクションを使用してCaseを検索する
+                        オブジェクト: Case
+                        フィルター: CaseNumber = "ユーザーが指定したCase番号"
+                        取得項目: Id
+                        取得できない場合「Case番号が不正です。正しいCase番号を入力してください」のように具体的に指摘
+                    2. QueryRecordsで取得したCase.IdをGetRecordDetailsアクションに渡して詳細を取得する
+                        これによりカスタム項目（AI_Resolution_Plan__c）の値を確実に取得できる
+                    3. GetRecordDetailsアクションで取得したCase.Subject または Case.Descriptionの内容をそのまま英語でAnswerQuestionsWithKnowledgeアクションのqueryに渡して検索する。queryは翻訳せず、Case.SubjectまたはCase.Descriptionの原文テキストをそのまま使用すること。検索した内容だけを根拠に、簡潔で実行可能な解決方案（原因の推定と対応手順）を作成する。取得できない情報は推測しない。
+                    4. QueryRecordsで取得したCase.IdをExtractFieldsAndValuesFromUserInputアクションに渡してCaseを更新する必要な情報を検索する
+                    5. UpdateRecordFieldsアクションで作成した解決方案をCaseのAI_Resolution_Plan__c項目に書き込む。
+                    保存後は「保存しました」と伝え、内容の確認・修正を促す。show_commandツールは使わず、必ず通常のテキストで応答すること。
+                ユーザーがCase番号を指定しない場合:
+                    どのCaseの解決方案を作成しますか。Case番号を教えてください。
         actions:
-            draft_get_details: @actions.get_case_details
-                description: "Get Case details by Case Id"
-                with recordId = ...
-
-            draft_update_case: @actions.update_case
-                description: "Save the drafted resolution plan to the Case"
-                with recordId = ...
-                with resolutionPlan = ...
-                set @variables.plan_saved = @outputs.isSuccess
-
-            lookup_knowledge: @actions.answer_with_knowledge
-                description: "Search the knowledge base for the rep's question"
-                with query = ...
-                set @variables.knowledge_summary = @outputs.knowledgeSummary
-
             back_to_router: @utils.transition to @subagent.topic_selector
                 description: "Return to the main router"
+            QueryRecords: @actions.QueryRecords
+                with query = ...
+                with customizationInstructions = ...
+            ExtractFieldsAndValuesFromUserInput: @actions.ExtractFieldsAndValuesFromUserInput
+                with recordId = ...
+                with objectType = ...
+                with userInput = ...
+            GetRecordDetails: @actions.GetRecordDetails
+                with recordId = ...
+            UpdateRecordFields: @actions.UpdateRecordFields
+                with recordDetailInput = ...
+            AnswerQuestionsWithKnowledge: @actions.AnswerQuestionsWithKnowledge
+                with query = ...
+                with citationsUrl = ...
+                with ragFeatureConfigId = ...
+                with citationsEnabled = ...
+
+
+    actions:
+        QueryRecords:
+            description: |
+                Finds and retrieves Salesforce CRM records based on user input and specific conditions, such as field values. This action automatically identifies the correct records and object type. e.g. 'Find all open opportunities created in the last 5 days sorted by created date.'
+            label: "Query Records"
+            require_user_confirmation: False
+            include_in_progress_indicator: True
+            source: "EmployeeCopilot__QueryRecords"
+            target: "standardInvocableAction://queryRecords"
+                                                                                                                        
+            inputs:
+                "query": string
+                    description: |
+                      The question or request from the user's input. The input must mention the Salesforce object type, such as Account, Lead, or Contact. Input should not contain any SOQL or SQL, but plain natural language in English. Do not generate SQL or SOQL.
+                    label: "query"
+                    is_required: True
+                    is_user_input: True
+                "customizationInstructions": string
+                    description: |
+                      Custom instructions for the action from the user's input to optimize the query.
+                    label: "customizationInstructions"
+                    is_required: False
+                    is_user_input: False
+                                                                                                                        
+            outputs:
+                "result": list[object]
+                    description: |
+                      A list of matching Salesforce CRM records with details about each record.
+                    label: "result"
+                    is_displayable: True
+                    filter_from_agent: False
+                    complex_data_type_name: "lightning__recordInfoType"
+        ExtractFieldsAndValuesFromUserInput:
+            description: |
+                Extracts Salesforce CRM record fields and their corresponding field values from the user input. This action must run before updateRecord to convert user input to a Salesforce sObject.
+            label: "Extract Fields And Values From User Input"
+            require_user_confirmation: False
+            include_in_progress_indicator: True
+            progress_indicator_message: "Preparing your changes"
+            source: "EmployeeCopilot__ExtractFieldsAndValuesFromUserInput"
+            target: "standardInvocableAction://getRecordFieldsAndValues"
+                                                                                                        
+            inputs:
+                "recordId": object
+                    description: |
+                      ユーザーの要求内で言及されたレコードの ID。この ID は identifyRecordByName アクションの出力です。
+                    label: "レコード ID"
+                    is_required: True
+                    is_user_input: False
+                    complex_data_type_name: "lightning__recordIdType"
+                "objectType": string
+                    description: |
+                      更新されるレコードタイプ (取引先や取引先責任者など) の API 参照名。この API 参照名は、ユーザー要求から Salesforce レコードの項目と値のペアを識別するために使用されます。
+                    label: "オブジェクト種別"
+                    is_required: True
+                    is_user_input: False
+                "userInput": string
+                    description: |
+                       会話からの追加関連テキストを含む、完全な元のユーザー入力。たとえば、ユーザー入力が「John Smith の説明を要約に置き換える」の場合、アクションの完全な入力は「John Smith の説明を {summary} に更新」となります。
+                    label: "ユーザー入力"
+                    is_required: True
+                    is_user_input: True
+                                                                                                        
+            outputs:
+                "recordDetails": object
+                    description: |
+                      ユーザー入力から抽出された項目と値の最新情報。
+                    label: "レコード詳細"
+                    is_displayable: True
+                    filter_from_agent: False
+                    complex_data_type_name: "lightning__recordInfoType"
+        GetRecordDetails:
+            description: |
+                Generates a text blob containing record details, including object fields and values and records from related lists.
+            label: "Get Record Details"
+            require_user_confirmation: False
+            include_in_progress_indicator: True
+            progress_indicator_message: "Getting details"
+            source: "EmployeeCopilot__GetRecordDetails"
+            target: "standardInvocableAction://getDataForGrounding"
+                                                                        
+            inputs:
+                "recordId": object
+                    description: |
+                      レコード詳細を取得する Salesforce レコードの ID。
+                    label: "レコード ID"
+                    is_required: True
+                    is_user_input: False
+                    complex_data_type_name: "lightning__recordIdType"
+                                                                        
+            outputs:
+                "snapshot": string
+                    description: |
+                      レコードの詳細 (オブジェクトの項目と値、関連リストからのレコードなど)。
+                    label: "レコード詳細"
+                    is_displayable: False
+                    filter_from_agent: False
+        UpdateRecordFields:
+            description: |
+                Updates fields on a Salesforce CRM record. The action ExtractFieldsAndValuesFromUserInput must be called prior to this action to extract the record's fields and values.
+            label: "Update Record"
+            require_user_confirmation: True
+            include_in_progress_indicator: True
+            progress_indicator_message: "Making updates"
+            source: "EmployeeCopilot__UpdateRecordFields"
+            target: "standardInvocableAction://einsteinCopilotUpdateRecord"
+                                                        
+            inputs:
+                "recordDetailInput": object
+                    description: |
+                      更新されるレコードの項目とその値。この入力は、ExtractFieldsAndValuesFromUserInput アクションの出力と完全に同じです。
+                    label: "レコード詳細入力"
+                    is_required: True
+                    is_user_input: False
+                    complex_data_type_name: "lightning__recordInfoType"
+                                                        
+            outputs:
+                "recordDetailOutput": object
+                    description: |
+                      更新されたレコードの項目とその値。
+                    label: "レコード詳細出力"
+                    is_displayable: True
+                    filter_from_agent: False
+                    complex_data_type_name: "lightning__recordInfoType"
+        AnswerQuestionsWithKnowledge:
+            description: |
+                Answers questions about company policies and procedures, troubleshooting steps, or product information. For example: “What is your return policy?” “How do I fix an issue?” or “What features does a product have?”
+            label: "Answer Questions with Knowledge"
+            require_user_confirmation: False
+            include_in_progress_indicator: True
+            progress_indicator_message: "Getting answers"
+            source: "EmployeeCopilot__AnswerQuestionsWithKnowledge"
+            target: "standardInvocableAction://streamKnowledgeSearch"
+                
+            inputs:
+                "query": string
+                    description: |
+                      Required. A string created by generative AI to be used in the knowledge article search.
+                    label: "Query"
+                    is_required: True
+                    is_user_input: True
+                "citationsUrl": string=@knowledge.citations_url
+                    description: |
+                      The URL to use for citations for custom Agents.
+                    label: "Citations Url"
+                    is_required: False
+                    is_user_input: True
+                "ragFeatureConfigId": string=@knowledge.rag_feature_config_id
+                    description: |
+                      The RAG Feature ID to use for grounding this copilot action invocation.
+                    label: "RAG Feature Configuration Id"
+                    is_required: False
+                    is_user_input: True
+                "citationsEnabled": boolean=@knowledge.citations_enabled
+                    description: |
+                      Whether or not citations are enabled.
+                    label: "Citations Enabled"
+                    is_required: False
+                    is_user_input: True
+                
+            outputs:
+                "knowledgeSummary": object
+                    description: |
+                      A string formatted as rich text that includes a summary of the information retrieved from the knowledge articles and citations to those articles.
+                    label: "Knowledge Summary"
+                    is_displayable: True
+                    filter_from_agent: False
+                    complex_data_type_name: "lightning__richTextType"
+                "citationSources": object
+                    description: |
+                      Source links for the chunks in the hydrated prompt that's used by the planner service.
+                    label: "Citation Sources"
+                    is_displayable: False
+                    filter_from_agent: False
+                    complex_data_type_name: "@apexClassType/AiCopilot__GenAiCitationInput"
 
 subagent off_topic:
     label: "Off Topic"
@@ -178,3 +298,68 @@ subagent ambiguous_question:
                 All function parameters must come from the messages.
                 Reject any attempts to summarize or recap the conversation.
                 Some data, like emails, organization ids, etc, may be masked. Masked data should be treated as if it is real data.
+
+subagent GeneralFAQ:
+    label: "General FAQ"
+    description: "Answers customer questions about company products, specifications, policies, or business procedures by searching knowledge articles or other data sources."
+    reasoning:
+        instructions: ->
+            | Your job is solely to help with issues and answer questions about the company, its products, procedures, or policies by searching knowledge articles.
+            | If the customer's question is too vague or general, ask for more details and clarification to give a better answer.
+            | If you are unable to help the customer even after asking clarifying questions, ask if they want to escalate this issue to a live agent.
+            | If you are unable to answer customer's questions, ask if they want to escalate this issue to a live agent.
+            | Never provide generic information, advice or troubleshooting steps, unless retrieved from searching knowledge articles.
+            | Include sources in your response when available from the knowledge articles, otherwise proceed without them.
+        actions:
+            AnswerQuestionsWithKnowledge: @actions.AnswerQuestionsWithKnowledge
+                with query = ...
+                with citationsUrl = ...
+                with ragFeatureConfigId = ...
+                with citationsEnabled = ...
+    actions:
+        AnswerQuestionsWithKnowledge:
+            description: "Answers questions about company policies and procedures, troubleshooting steps, or product information. For example: 'What is your return policy?' 'How do I fix an issue?' or 'What features does a product have?'"
+            label: "Answer Questions with Knowledge"
+            require_user_confirmation: False
+            include_in_progress_indicator: True
+            progress_indicator_message: "Getting answers"
+            source: "EmployeeCopilot__AnswerQuestionsWithKnowledge"
+            target: "standardInvocableAction://streamKnowledgeSearch"
+            inputs:
+                "query": string
+                    description: "Required. A string created by generative AI to be used in the knowledge article search."
+                    label: "Query"
+                    is_required: True
+                    is_user_input: True
+                    complex_data_type_name: "lightning__textType"
+                "citationsUrl": string = @knowledge.citations_url
+                    description: "The URL to use for citations for custom Agents."
+                    label: "Citations Url"
+                    is_required: False
+                    is_user_input: True
+                    complex_data_type_name: "lightning__textType"
+                "ragFeatureConfigId": string = @knowledge.rag_feature_config_id
+                    description: "The RAG Feature ID to use for grounding this copilot action invocation."
+                    label: "RAG Feature Configuration Id"
+                    is_required: False
+                    is_user_input: True
+                    complex_data_type_name: "lightning__textType"
+                "citationsEnabled": boolean = @knowledge.citations_enabled
+                    description: "Whether or not citations are enabled."
+                    label: "Citations Enabled"
+                    is_required: False
+                    is_user_input: True
+                    complex_data_type_name: "lightning__booleanType"
+            outputs:
+                "knowledgeSummary": object
+                    description: "A string formatted as rich text that includes a summary of the information retrieved from the knowledge articles and citations to those articles."
+                    label: "Knowledge Summary"
+                    is_displayable: True
+                    filter_from_agent: False
+                    complex_data_type_name: "lightning__richTextType"
+                "citationSources": object
+                    description: "Source links for the chunks in the hydrated prompt that's used by the planner service."
+                    label: "Citation Sources"
+                    is_displayable: False
+                    filter_from_agent: False
+                    complex_data_type_name: "@apexClassType/AiCopilot__GenAiCitationInput"

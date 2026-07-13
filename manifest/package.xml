@@ -1,28 +1,35 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <!-- Release manifest: Service Assist Agent (サービス担当Agent) のリソースのみ -->
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <!-- エージェントスクリプト本体 -->
     <types>
         <members>Service_Assist_Agent</members>
         <name>AiAuthoringBundle</name>
     </types>
+    <!-- Bot定義 -->
     <types>
         <members>Service_Assist_Agent</members>
         <name>Bot</name>
     </types>
+    <!-- アクティブなプランナーバンドル(v5) -->
     <types>
-        <members>Service_Assist_Agent_v1</members>
+        <members>Service_Assist_Agent_v5</members>
         <name>GenAiPlannerBundle</name>
     </types>
-    <types>
-        <members>SaveCaseResolutionPlan</members>
-        <name>ApexClass</name>
-    </types>
+    <!-- カスタム項目 -->
     <types>
         <members>Case.AI_Resolution_Plan__c</members>
         <name>CustomField</name>
     </types>
+    <!-- ページレイアウト(AI_Resolution_Plan__c 含む) -->
+    <types>
+        <members>Case-Case Layout</members>
+        <name>Layout</name>
+    </types>
+    <!-- 権限セット -->
     <types>
         <members>Service_Assist_Agent_Access</members>
+        <members>NextGen_1bYdL000000Azv3UAC_Permissions</members>
         <name>PermissionSet</name>
     </types>
     <version>66.0</version>

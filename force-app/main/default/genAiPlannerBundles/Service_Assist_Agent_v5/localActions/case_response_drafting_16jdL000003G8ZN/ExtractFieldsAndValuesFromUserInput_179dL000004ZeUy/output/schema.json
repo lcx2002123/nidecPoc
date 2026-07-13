@@ -1,0 +1,15 @@
+{
+  "unevaluatedProperties" : false,
+  "properties" : {
+    "recordDetails" : {
+      "title" : "レコード詳細",
+      "description" : "ユーザー入力から抽出された項目と値の最新情報。",
+      "lightning:type" : "lightning__recordInfoType",
+      "einstein:description" : "The updates for the fields and values that were extracted from the user input.",
+      "copilotAction:isDisplayable" : true,
+      "copilotAction:isUsedByPlanner" : true
+    }
+  },
+  "lightning:type" : "lightning__objectType",
+  "lightning:textIndexed" : true
+}
